@@ -160,12 +160,23 @@ export function checkIfStateModificationsAreAllowed(atom: IAtom) {
         )
 }
 
+export function checkIfStateReadsAreAllowed(observable: IObservable) {
+    if (
+        process.env.NODE_ENV !== "production" &&
+        !globalState.allowStateReads &&
+        globalState.observableRequiresReaction
+    ) {
+        console.warn(`[mobx] Observable ${observable.name} being read outside a reactive context`)
+    }
+}
+
 /**
  * Executes the provided function `f` and tracks which observables are being accessed.
  * The tracking information is stored on the `derivation` object and the derivation is registered
  * as observer of any of the accessed observables.
  */
 export function trackDerivedFunction<T>(derivation: IDerivation, f: () => T, context: any) {
+    const prevAllowStateReads = allowStateReadsStart(true)
     // pre allocate array allocation + room for variation in deps
     // array will be trimmed by bindDependencies
     changeDependenciesStateTo0(derivation)
@@ -190,6 +201,8 @@ export function trackDerivedFunction<T>(derivation: IDerivation, f: () => T, con
     if (derivation.observing.length === 0) {
         warnAboutDerivationWithoutDependencies(derivation)
     }
+
+    allowStateReadsEnd(prevAllowStateReads)
 
     return result
 }
@@ -281,11 +294,13 @@ export function clearObserving(derivation: IDerivation) {
 }
 
 export function untracked<T>(action: () => T): T {
+    const prevAllowStateReads = allowStateReadsStart(false)
     const prev = untrackedStart()
     try {
         return action()
     } finally {
         untrackedEnd(prev)
+        allowStateReadsEnd(prevAllowStateReads)
     }
 }
 
@@ -297,6 +312,16 @@ export function untrackedStart(): IDerivation | null {
 
 export function untrackedEnd(prev: IDerivation | null) {
     globalState.trackingDerivation = prev
+}
+
+export function allowStateReadsStart(allowStateReads: boolean) {
+    const prev = globalState.allowStateReads
+    globalState.allowStateReads = allowStateReads
+    return prev
+}
+
+export function allowStateReadsEnd(prev: boolean) {
+    globalState.allowStateReads = prev
 }
 
 /**

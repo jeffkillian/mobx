@@ -7,7 +7,8 @@ import {
     TraceMode,
     getDependencyTree,
     globalState,
-    runReactions
+    runReactions,
+    checkIfStateReadsAreAllowed
 } from "../internal"
 
 export interface IDepTreeNode {
@@ -131,6 +132,8 @@ export function endBatch() {
 }
 
 export function reportObserved(observable: IObservable): boolean {
+    checkIfStateReadsAreAllowed(observable)
+
     const derivation = globalState.trackingDerivation
     if (derivation !== null) {
         /**
@@ -148,13 +151,10 @@ export function reportObserved(observable: IObservable): boolean {
             }
         }
         return true
-    } else if (globalState.inBatch > 0) {
-        if (observable.observers.size === 0) {
-            queueForUnobservation(observable)
-        }
-    } else {
-        warnAboutUntrackedObservableRead(observable.name)
+    } else if (observable.observers.size === 0 && globalState.inBatch > 0) {
+        queueForUnobservation(observable)
     }
+
     return false
 }
 
@@ -269,11 +269,4 @@ function printDepTree(tree: IDependencyTree, lines: string[], depth: number) {
     }
     lines.push(`${new Array(depth).join("\t")}${tree.name}`) // MWE: not the fastest, but the easiest way :)
     if (tree.dependencies) tree.dependencies.forEach(child => printDepTree(child, lines, depth + 1))
-}
-
-function warnAboutUntrackedObservableRead(name: string) {
-    if (process.env.NODE_ENV === "production") return
-    if (globalState.observableRequiresReaction) {
-        console.warn(`[mobx] Observable ${name} being read outside a reactive context`)
-    }
 }

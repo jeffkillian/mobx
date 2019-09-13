@@ -291,7 +291,7 @@ describe("observableRequiresReaction", function() {
             mobx.configure({ observableRequiresReaction: false })
         }
     })
-    test("don't warn on reads inside batch - computed", function() {
+    test("don't warn on reads inside a computed", function() {
         try {
             mobx.configure({ observableRequiresReaction: true })
             const x = mobx.observable({
@@ -311,7 +311,7 @@ describe("observableRequiresReaction", function() {
         }
     })
 
-    test("don't warn on reads inside batch - action", function() {
+    test("don't warn on reads inside an action", function() {
         try {
             mobx.configure({ observableRequiresReaction: true })
             const x = mobx.observable({
@@ -330,7 +330,7 @@ describe("observableRequiresReaction", function() {
         }
     })
 
-    test("don't warn on reads inside batch - transaction", function() {
+    test("don't warn on reads inside a transaction", function() {
         try {
             mobx.configure({ observableRequiresReaction: true })
             const x = mobx.observable({
@@ -347,7 +347,7 @@ describe("observableRequiresReaction", function() {
         }
     })
 
-    test("don't warn on reads inside batch - untracked inside autorun", function() {
+    test("warn on reads inside untracked", function() {
         try {
             mobx.configure({ observableRequiresReaction: true })
             const x = mobx.observable({
@@ -362,7 +362,7 @@ describe("observableRequiresReaction", function() {
                 disposer()
             })
 
-            expect(messages.length).toBe(0)
+            expect(messages.length).toBe(1)
         } finally {
             mobx.configure({ observableRequiresReaction: false })
         }

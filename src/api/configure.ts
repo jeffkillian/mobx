@@ -71,6 +71,8 @@ export function configure(options: {
     }
     if (observableRequiresReaction !== undefined) {
         globalState.observableRequiresReaction = !!observableRequiresReaction
+
+        globalState.allowStateReads = !globalState.observableRequiresReaction
     }
     if (computedConfigurable !== undefined) {
         globalState.computedConfigurable = !!computedConfigurable

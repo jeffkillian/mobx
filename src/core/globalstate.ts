@@ -10,6 +10,7 @@ const persistentKeys: (keyof MobXGlobals)[] = [
     "computedRequiresReaction",
     "reactionRequiresObservable",
     "observableRequiresReaction",
+    "allowStateReads",
     "disableErrorBoundaries",
     "runId",
     "UNCHANGED"
@@ -82,6 +83,12 @@ export class MobXGlobals {
      * To ensure that those functions stay pure.
      */
     allowStateChanges = true
+
+    /**
+     * Is it allowed to read observables at this point?
+     * Used to hold the state needed for `observableRequiresReaction`
+     */
+    allowStateReads = true
 
     /**
      * If strict mode is enabled, state changes are by default not allowed
